@@ -1,12 +1,12 @@
-const CustomersController = () => {
-    const customers = [
-        {id: 1, name: "Dev Samurai"},
-        {id: 2, name: "UOL"},
-    ]
+import Customer from "../models/Customer";
 
+const CustomersController = () => {
     return {
-        index(req, res) {
-            return res.json(customers)
+        async index(req, res) {
+            const data = await Customer.findAll({
+                limit: 1000
+            });
+            return res.json(data)
         },
 
         show(req, res) {},
