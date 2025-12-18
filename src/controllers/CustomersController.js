@@ -104,7 +104,9 @@ const CustomersController = () => {
             return res.json(data)
         },
 
-        show(req, res) {},
+        show(req, res) {
+          
+        },
 
         create (req, res) {
             const { name, email } = req.body;
