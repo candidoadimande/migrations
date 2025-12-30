@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import Customer from "../models/Customer";
 import { parseISO } from "date-fns";
 import Contact from "../models/Contact";
-
+import * as Yup from "yup";
 const CustomersController = () => {
 
     return {
@@ -104,31 +104,63 @@ const CustomersController = () => {
             return res.json(data)
         },
 
-        show(req, res) {
+        async show(req, res) {
+          const customer = await Customer.findByPk(req.params.id);
           
+          if (!customer) {
+            return res.status(404).json();
+          }
+          return res.json(customer)
         },
 
-        create (req, res) {
-            const { name, email } = req.body;
-            // const id = customers[customers.length - 1].id + 1;
-
-            // const newCustomer = { id, name}
-            // customers.push(newCustomer)
-
-            // return res.json(newCustomer)
-            const user =  Customer.create({
-            name,
-            email
-            });
-
-            return res.json(user);
-
-
+        async create (req, res) {
+          
+          const schema = Yup.object().shape({
+            name: Yup.string().required(),
+            email: Yup.string().email().required(),
+            status: Yup.string().uppercase()
+          });
+          
+          if (!( await schema.isValid(req.body))) {
+            return res.status(400).json({Error: "validing"})
+          }
+          
+          const newCustomer = await Customer.create(req.body)
+          
+          return res.status(201).json(newCustomer)
         },
 
-        update(req, res) {},
+        async update(req, res) {
+          const schema = Yup.object().shape({
+            name: Yup.string(),
+            email: Yup.string().email(),
+            status: Yup.string().uppercase()
+          });
+          
+          if (!( await schema.isValid(req.body))) {
+            return res.status(400).json({Error: "validing"})
+          }
+          const customer = await Customer.findByPk(req.params.id);
+          
+          if (!customer) {
+            return res.status(404).json();
+          }
+          
+          await customer.update(req.body);
+          
+          return res.json(customer)
+        },
 
-        destroy(req, res) {},
+        async destroy(req, res) {
+          const customer = await Customer.findByPk(req.params.id);
+          
+          if (!customer) {
+            return res.status(404).json();
+          }
+          
+          await customer.destroy();
+          return res.json();
+        },
     }
 }
 

@@ -9,8 +9,8 @@ class Customer extends Model {
         },{
             sequelize,
             name: {
-                singular: "contact",
-                plural: "contacts",
+                singular: "customer",
+                plural: "customers",
             }
         });
     }
