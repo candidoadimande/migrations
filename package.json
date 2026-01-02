@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "express": "^5.2.1",
     "mysql2": "^3.16.0",

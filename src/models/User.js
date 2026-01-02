@@ -6,8 +6,7 @@ class User extends Model {
             name: Sequelize.STRING,
             email: Sequelize.STRING,
             password_hash: Sequelize.STRING,
-            provider: Sequelize.BOOLEAN
-        },{
+import bcrypt from ""
             sequelize,
             name: {
                 singular: "user",
