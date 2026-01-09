@@ -109,15 +109,20 @@ const ContactsController = () => {
           const schema = Yup.object().shape({
             name: Yup.string().required(),
             email: Yup.string().email().required(),
-            password_hash: Yup.string().required(),
-          
+            password: Yup.string().required().min(8),
+            passwordComfirmation: Yup.string().when("password", 
+              (password, field) => (
+                password ? field.required().oneOf([Yup.ref("password")]) : field
+              )
+            )
+          });
           if (!( await schema.isValid(req.body))) {
             return res.status(400).json({Error: "validing"})
           }
           
-          const newUser = await User.create(req.body)
+          const { id, name, email, createdAt, updatedAfter } = await User.create(req.body)
           
-          return res.status(201).json(newUser)
+          return res.status(201).json({ id, name, email, createdAt, updatedAfter })
           
         },
 
