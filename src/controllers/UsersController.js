@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { parseISO } from "date-fns";
 import User from "../models/User";
 import * as Yup from "yup";
-const ContactsController = () => {
+const UsersController = () => {
 
     return {
         async index(req, res) {
@@ -92,7 +92,9 @@ const ContactsController = () => {
             if (!data) {
               return res.status(404).json({Error: "no data"})
             }
-
+            
+            console.log({userId: req.userId});
+            
             return res.json(data)
         },
 
@@ -102,22 +104,19 @@ const ContactsController = () => {
           if (!User) {
             return res.status(404).json();
           }
-          return res.json(user)
+          const { id, name, email, createdAt, updatedAfter } = user
+          return res.json({ id, name, email, createdAt, updatedAfter })
         },
-
+        //CREATE
         async create (req, res) {
           const schema = Yup.object().shape({
             name: Yup.string().required(),
             email: Yup.string().email().required(),
             password: Yup.string().required().min(8),
-            passwordComfirmation: Yup.string().when("password", 
-              (password, field) => (
-                password ? field.required().oneOf([Yup.ref("password")]) : field
-              )
-            )
+            passwordConfirmation: Yup.string().required().oneOf([Yup.ref("password")], "passwords must match")
           });
           if (!( await schema.isValid(req.body))) {
-            return res.status(400).json({Error: "validing"})
+            return res.status(400).json({Error: "invaliding"})
           }
           
           const { id, name, email, createdAt, updatedAfter } = await User.create(req.body)
@@ -125,50 +124,49 @@ const ContactsController = () => {
           return res.status(201).json({ id, name, email, createdAt, updatedAfter })
           
         },
-
+        //UPDATE
         async update(req, res) {
           const schema = Yup.object().shape({
             name: Yup.string(),
             email: Yup.string().email(),
-            status: Yup.string().uppercase()
+            oldPassword: Yup.string().min(8),
+            password: Yup.string().min(8).when("oldPassword", (oldPassword, field) =>
+                oldPassword ? field.required() : field
+            ),
+            passwordConfirmation: Yup.string().required().oneOf([Yup.ref("password")], "passwords must match")
           });
-          
           if (!( await schema.isValid(req.body))) {
-            return res.status(400).json({Error: "validing"})
+            return res.status(400).json({Error: "invaliding"})
           }
-          const contact = await Contact.findOne({
-            where: {
-              customer_id: req.params.customerId,
-              id: req.params.id
-            },
-            
-          });
           
-          if (!contact) {
+          const user = await User.findByPk(req.params.id);
+         
+         if (!user) {
             return res.status(404).json();
+         }
+          
+          const { oldPassword } = req.body;
+          
+          if (oldPassword && !(await user.checkPassword(oldPassword))) {
+            return res.status(401).json({ error: "User password not match"})
           }
+          const { id, name, email, createdAt, updatedAfter } = await user.update(req.body)
           
-          await contact.update(req.body);
-          
-          return res.json(contact);
+          return res.status(201).json({ id, name, email, createdAt, updatedAfter })
+            
         },
 
         async destroy(req, res) {
-          const contact = await Contact.findOne({
-            where: {
-              customer_id: req.params.customerId,
-              id: req.params.id
-            },
-          });
+          const user = await User.findByPk(req.params.id);
           
-          if (!contact) {
+          if (!user) {
             return res.status(404).json();
           }
           
-          await contact.destroy();
+          await user.destroy();
           return res.json();
-        },
+        }
     }
 }
 
-export default ContactsController;
+export default UsersController;
